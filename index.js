@@ -3,6 +3,7 @@ const HEADS = true;
 const TAILS = false;
 const BOOL_TO_COIN = { [HEADS]: 3, [TAILS]: 2 };
 
+// Via https://ja.wikipedia.org/wiki/易経
 const TABLE = {
   地天: "䷊,11,泰",
   山天: "䷙,26,大畜",
@@ -71,15 +72,31 @@ const TABLE = {
 };
 const TRIGRAMS = "天沢火雷風水山地";
 
+const makeRandomCoinFlip = (seed) => {
+  let x = (seed ?? Math.random() * 2 ** 32) >>> 0;
+  // from https://github.com/skeeto/hash-prospector#three-round-functions
+  const triple32 = () => {
+    x ^= x >>> 17;
+    x = Math.imul(x, 0xed5ad4bb);
+    x ^= x >>> 11;
+    x = Math.imul(x, 0xac4c1b51);
+    x ^= x >>> 15;
+    x = Math.imul(x, 0x31848bab);
+    x ^= x >>> 14;
+    // let odd = true = heads
+    return (x & 1) === 1;
+  };
+  return triple32;
+};
 // closer to 1 = heads = true
 const coin = () => Math.random() > 0.5;
-const line = () => {
-  const first = coin() === HEADS && HEADS === coin() ? 2 : 3;
-  const second = BOOL_TO_COIN[coin()] + BOOL_TO_COIN[coin()];
+const line = (rng = coin) => {
+  const first = rng() === HEADS && HEADS === rng() ? 2 : 3;
+  const second = BOOL_TO_COIN[rng()] + BOOL_TO_COIN[rng()];
   return first + second;
 };
 
-const hexaline = () => Array.from({ length: 6 }, (_) => line());
+const hexaline = (rng) => Array.from({ length: 6 }, (_) => line(rng));
 
 const linesToTrindex = (lines) =>
   lines.reduce((prev, x, i) => prev + (!(x % 2) << i), 0);
@@ -99,17 +116,31 @@ const hexalineToPair = (orig) => {
   const firstIndex = `${TRIGRAMS[top]}${TRIGRAMS[bot]}`;
   const first = TABLE[firstIndex];
 
-  const moving = arr
+  // Don't reverse
+  const moving = orig
     .map((line) => (line === 6 || line === 9 ? `${line}` : "_"))
     .join("");
 
   const secondIndex = `${TRIGRAMS[topFlipped]}${TRIGRAMS[botFlipped]}`;
   const next = secondIndex === firstIndex ? undefined : TABLE[secondIndex];
 
-  return [first, moving, next];
+  return { first, movingBottomUp: moving, next };
 };
 
-console.log(hexalineToPair(hexaline()));
+if (require.main === module) {
+  {
+    const rng = makeRandomCoinFlip(1234567890);
+    console.log(hexalineToPair(hexaline(rng)));
+    console.log(hexalineToPair(hexaline(rng)));
+    console.log(hexalineToPair(hexaline(rng)));
+  }
+  {
+    const rng = makeRandomCoinFlip();
+    console.log(hexalineToPair(hexaline(rng)));
+    console.log(hexalineToPair(hexaline(rng)));
+    console.log(hexalineToPair(hexaline(rng)));
+  }
+}
 
 const test = () => {
   const draws = [];
