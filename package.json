@@ -1,0 +1,25 @@
+{
+  "name": "iching",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "demo": "node demo-cli.mjs",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fasiha/iching.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSE",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/fasiha/iching/issues"
+  },
+  "homepage": "https://github.com/fasiha/iching#readme",
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}
