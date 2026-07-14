@@ -70,6 +70,10 @@ const TABLE = {
   沢地: "䷬,45,萃",
   天地: "䷋,12,否",
 };
+const parseTableEntry = (value) => {
+  const [symbol, number, hanzi] = value.split(",");
+  return { symbol, number: parseInt(number, 10), hanzi };
+};
 const TRIGRAMS = "天沢火雷風水山地";
 
 const makeRandomCoinFlip = (seed) => {
@@ -135,7 +139,43 @@ const hexalineToPair = (orig) => {
   const secondIndex = `${TRIGRAMS[topFlipped]}${TRIGRAMS[botFlipped]}`;
   const next = secondIndex === firstIndex ? undefined : TABLE[secondIndex];
 
-  return { first, movingBottomUp: moving, next };
+  const hint = makeSimpleHint(first, moving, next);
+  return { first, movingBottomUp: moving, next, hint };
+};
+
+const ORDINALS = {
+  0: "beginning/lowest/first",
+  1: "second",
+  2: "third",
+  3: "fourth",
+  4: "fifth",
+  5: "end/highest/last/sixth",
+};
+const makeSimpleHint = (first, movingBottomUp, next) => {
+  const parsedFirst = parseTableEntry(first);
+  let hint = `To understand your reading,
+1. Look up ${parsedFirst.number} (${parsedFirst.hanzi}) and read its judgement and image`;
+
+  if (next) {
+    const parsedSecond = parseTableEntry(next);
+
+    hint = `${hint}
+2. Consult the relevant statements regarding changing lines:
+${movingBottomUp
+  .split("")
+  .map((val, idx) =>
+    val === "_" ? null : `  - ${val} in the ${ORDINALS[idx]} place`,
+  )
+  .filter(Boolean)
+  .join("\n")}
+3. Then look up ${parsedSecond.number} (${parsedSecond.hanzi}) and read its judgement and image. Ignore any statements regarding changing lines.`;
+  } else {
+    hint = `${hint}
+
+That's it. The statements regarding changing lines (e.g., "six in the beginning" or "nine in the second place") are not relevant to your reading.`;
+  }
+
+  return hint;
 };
 
 /** Given an optional numeric seed, draw an I Ching hexagram, moving lines, and (if necessary) the next hexagram.
